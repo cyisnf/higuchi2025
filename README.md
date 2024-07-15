@@ -19,15 +19,15 @@ How humans estimate causality is one of the central questions of cognitive scien
 
 ## Experimental Analysis
 
-The following code can be executed to replicate the results of Chapter 3.
+The following code can be executed to replicate the results of the _Experiment_ section.
 
-- eval_colleration.py (Table 8)
-- eval_aicc.py (Table 8)
-- eval_aicc_for_weighted.py (Figure 2)
+- eval_colleration.py (Table 5)
+- eval_aicc.py (Table 5)
+- eval_aicc_for_weighted.py (Figure 1)
 
 ## Simulation
 
-The following code can be executed to replicate the results of Chapter 4.
+The following code can be executed to replicate the results of the _Simulation_ section.
 Note that the first run takes several hours.
 
-- do_simulation.py (Figures 3 and 4)
+- do_simulation.py (Figures 2 and 3)
