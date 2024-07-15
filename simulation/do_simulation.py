@@ -8,18 +8,18 @@ pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
 
 # Figure settings
-plt.rcParams["font.family"] = "Arial"  # font familyの設定
-plt.rcParams["font.size"] = 20  # 全体のフォントサイズが変更されま
-plt.rcParams["xtick.direction"] = "out"  # x軸の目盛りの向き
-plt.rcParams["ytick.direction"] = "out"  # y軸の目盛りの向き
-plt.rcParams["xtick.minor.visible"] = False  # x軸補助目盛りの追加
-plt.rcParams["ytick.minor.visible"] = False  # y軸補助目盛りの追加
-plt.rcParams["xtick.top"] = False  # x軸の上部目盛り
-plt.rcParams["ytick.right"] = False  # y軸の右部目盛り
-plt.rcParams["legend.fancybox"] = False  # 丸角OFF
-plt.rcParams["legend.framealpha"] = 1  # 透明度の指定、0で塗りつぶしなし
-plt.rcParams["legend.edgecolor"] = "black"  # edgeの色を変更
-plt.rcParams["legend.markerscale"] = 5  # markerサイズの倍率
+plt.rcParams["font.family"] = "Arial"
+plt.rcParams["font.size"] = 20
+plt.rcParams["xtick.direction"] = "out"
+plt.rcParams["ytick.direction"] = "out"
+plt.rcParams["xtick.minor.visible"] = False
+plt.rcParams["ytick.minor.visible"] = False
+plt.rcParams["xtick.top"] = False
+plt.rcParams["ytick.right"] = False
+plt.rcParams["legend.fancybox"] = False
+plt.rcParams["legend.framealpha"] = 1
+plt.rcParams["legend.edgecolor"] = "black"
+plt.rcParams["legend.markerscale"] = 5
 
 row = 3
 col = 2
