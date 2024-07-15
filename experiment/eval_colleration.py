@@ -9,9 +9,6 @@ from scipy.stats import pearsonr
 warnings.resetwarnings()
 warnings.simplefilter("ignore", RuntimeWarning)
 
-row = 3
-col = 2
-
 raw_data = pd.read_csv("experimental_data.csv")
 # raw_data = raw_data.drop("est_i", axis=1)
 raw_data = raw_data.drop("number", axis=1)
@@ -68,11 +65,11 @@ corr = df.corr(method=lambda x, y: pearsonr(x, y)[0])
 pvalues = df.corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(len(df.columns))
 asterisk = pvalues.map(lambda x: "".join(["*" for t in [0.05, 0.01, 0.001] if x <= t]))
 
-print('correlations:')
+print("correlations:")
 print(corr.iloc[0, 1:])
-print('\npvalues:')
+print("\npvalues:")
 print(pvalues.iloc[0, 1:])
-print('\nresults:')
+print("\nresults:")
 print(corr.iloc[0, 1:].round(3).astype(str) + asterisk.iloc[0, 1:])
 # %%
 
@@ -83,13 +80,15 @@ w_df = w_df.T
 
 w_corr = w_df.corr(method=lambda x, y: pearsonr(x, y)[0])
 w_pvalues = w_df.corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(len(w_df.columns))
-w_asterisk = w_pvalues.map(lambda x: "".join(["*" for t in [0.05, 0.01, 0.001] if x <= t]))
+w_asterisk = w_pvalues.map(
+    lambda x: "".join(["*" for t in [0.05, 0.01, 0.001] if x <= t])
+)
 
-print('correlations:')
+print("correlations:")
 print(w_corr.iloc[0, 1:])
-print('\npvalues:')
+print("\npvalues:")
 print(w_pvalues.iloc[0, 1:])
-print('\nresults:')
+print("\nresults:")
 print(w_corr.iloc[0, 1:].round(3).astype(str) + w_asterisk.iloc[0, 1:])
 
 plt.xlabel("weight of 1st term")

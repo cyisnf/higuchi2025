@@ -10,10 +10,6 @@ from statsmodels.tools import eval_measures
 warnings.resetwarnings()
 warnings.simplefilter("ignore", RuntimeWarning)
 
-row = 3
-col = 2
-ar_ct = np.zeros((row, col), dtype=int)
-
 raw_data = pd.read_csv("experimental_data.csv")
 raw_data = raw_data.drop("number", axis=1)
 raw_data = raw_data.rename(columns={"frequency": "stim"})

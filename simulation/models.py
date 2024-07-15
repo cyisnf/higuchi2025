@@ -91,14 +91,6 @@ def paris_term2(ct):
 
 
 def paris_merge(ct):
-    ct = ct.reshape(3, 2)
-    # row, col = ct.shape
-    a, b, m, n, c, _ = (
-        ct[0, 0],
-        ct[0, 1],
-        ct[1, 0],
-        ct[1, 1],
-        ct[2, 0],
-        ct[2, 1],
-    )
-    return (a + m) / (a + m + n + b + c)
+    product = ct[0:-1, 0:-1].sum()
+    sum_ = ct.sum() - ct[-1, -1]
+    return product / sum_

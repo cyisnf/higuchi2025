@@ -21,9 +21,6 @@ plt.rcParams["legend.framealpha"] = 1
 plt.rcParams["legend.edgecolor"] = "black"
 plt.rcParams["legend.markerscale"] = 5
 
-row = 3
-col = 2
-
 READ_RESULT = True  # Whether to reuse generated CSVs
 sim_size = 1000000
 sample_sizes = [10, 100, 1000]

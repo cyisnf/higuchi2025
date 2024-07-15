@@ -15,11 +15,6 @@ warnings.simplefilter("ignore", RuntimeWarning)
 importlib.reload(models)
 
 
-row = 3
-col = 2
-ar_ct = np.zeros((row, col), dtype=int)
-
-
 raw_data = pd.read_csv("experimental_data.csv")
 raw_data = raw_data.drop("number", axis=1)
 raw_data = raw_data.rename(columns={"frequency": "stim"})
@@ -84,5 +79,3 @@ plt.tight_layout()
 os.makedirs('./figs', exist_ok=True)
 plt.savefig("./figs/fitness_of_weighted.png")
 # %%
-
-
