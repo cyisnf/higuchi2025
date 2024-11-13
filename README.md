@@ -15,8 +15,11 @@ How humans estimate causality is one of the central questions of cognitive scien
 
 1. Install the relevant version of Python.
 2. At the terminal, execute the following commands to set up the environment for running these programs.
+
     ```pip install -r requirements.txt```
+
 3. You can reproduce our results by executing the following command at the terminal.
+
     ```python [file_name].py```
 
 ## Experimental Analysis
