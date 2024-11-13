@@ -10,7 +10,7 @@ How humans estimate causality is one of the central questions of cognitive scien
 
 - Python (Ver. 3.9.13)
 - Packages listed in requirements.txt
-  - If you have the relevant version of Python installed, you can run our program by executing the following command on the terminal. ```pip install -r requirements.txt```
+  - If you have the relevant version of Python installed, the environment for running our programs is ready when you execute the following command on the terminal. ```pip install -r requirements.txt```
 
 ## Experimental Analysis
 
