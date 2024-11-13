@@ -1,4 +1,4 @@
-user_id,stimulation_id,response_value
+part_id,stim_id,response_value
 92904815,4,80
 92904815,5,80
 92904815,2,70

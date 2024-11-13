@@ -5,18 +5,20 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import models
-import importlib
 import statsmodels.formula.api as smf
 from statsmodels.tools import eval_measures
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
 warnings.resetwarnings()
 warnings.simplefilter("ignore", RuntimeWarning)
+warnings.simplefilter("ignore", FutureWarning)
+warnings.simplefilter("ignore", ConvergenceWarning)
 
-importlib.reload(models)
-
-
+# Loads experimental data
 raw_data = pd.read_csv("experimental_data.csv")
 raw_data["response_value"] /= 100
+
+# Stimuli used in our experiment
 stims = np.array(
     [
         [7, 1, 1, 1, 1, 7],
@@ -28,52 +30,48 @@ stims = np.array(
     ]
 )
 
-# %%
-weighted_mean_prs_vals_arr = [[] for i in range(11)]
-for stim in stims:
+# Weights of the weighted mean
+weights = np.round(np.arange(0.0, 1.1, 0.1), 1)
+
+# Calculates the weighted mean model value for all combinations of weight and stimulus.
+prs_weighted_mean_vals = np.zeros((len(weights), len(stims)))
+for s_i, stim in enumerate(stims):
     stim = stim.reshape(3, 2)
-    for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
-        prs_weighted_mean_vals_arr[w_i].append(
+    for w_i, w in enumerate(weights):
+        raw_data.loc[raw_data["stim_id"] == s_i + 1, f"w{w_i}"] = (
             models.paris_weighted_mean(stim, [w, 1 - w])
         )
 
+# Calculates the descriptive performances using a linear mixed model that assumes a random slope and random intercept for each participant.
 bics = {}
 aiccs = {}
+for w_i, w in enumerate(weights):
+    model = f"w{w_i}"
+    md = smf.mixedlm(
+        f"response_value ~ {model}",
+        raw_data,
+        re_formula=f"~{model}",
+        groups=raw_data["part_id"],
+    )
+    mdf = md.fit(reml=False)
+    print(mdf.summary())
+    bics[f"{model}"] = mdf.bic
+    aiccs[f"{model}"] = eval_measures.aicc(mdf.llf, mdf.nobs, mdf.df_modelwc)
 
-for i in range(len(stims)):
-    for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
-        idx = "w" + str(int(w * 10))
-        raw_data.loc[raw_data["stimulation_id"] == i + 1, idx] = prs_weighted_mean_vals_arr[w_i][
-            i
-        ]
 
-
-for i in range(len(stims)):
-    for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
-        idx = "w" + str(int(w * 10))
-        md = smf.mixedlm(
-            f"response_value ~ {idx}",
-            raw_data,
-            re_formula=f"~{idx}",
-            groups=raw_data["user_id"],
-        )
-        mdf = md.fit(reml=False)
-        print(mdf.summary())
-        raw_data[f"fitted_{w*10}"] = mdf.predict()
-        bics[f"{idx}"] = mdf.bic
-        aiccs[f"{idx}"] = eval_measures.aicc(mdf.llf, mdf.nobs, mdf.df_modelwc)
-
-# %%
-index = [round(0.1 * i, 1) for i in range(11)]
-arr = np.array([list(bics.values()), list(aiccs.values())])
-df = pd.DataFrame(arr.T, columns=["BIC", "AICc"], index=index)
+# Plots the results
+xticks = np.round(np.arange(0.0, 1.1, 0.1), 1)
+df = pd.DataFrame(
+    np.array([list(bics.values()), list(aiccs.values())]).T,
+    columns=["BIC", "AICc"],
+    index=xticks,
+)
 df.plot(marker="o", figsize=(5, 2.3))
-plt.xlabel("Weight of $\mathrm{pARIs}_{C=1, E=1}$")
+plt.xlabel(r"Weight of $\mathrm{pARIs}_{C=1, E=1}$")
 plt.ylabel("Fitness with data")
-plt.xticks(index)
+plt.xticks(xticks)
 plt.grid()
 plt.legend()
 plt.tight_layout()
-os.makedirs('./figs', exist_ok=True)
+os.makedirs("./figs", exist_ok=True)
 plt.savefig("./figs/fitness_of_weighted.png")
-# %%

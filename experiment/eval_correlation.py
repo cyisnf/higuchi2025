@@ -9,10 +9,13 @@ from scipy.stats import pearsonr
 warnings.resetwarnings()
 warnings.simplefilter("ignore", RuntimeWarning)
 
+# Loads experimental data
 raw_data = pd.read_csv("experimental_data.csv")
-# raw_data = raw_data.drop("est_i", axis=1)
-mean_df = raw_data.groupby("stimulation_id")["response_value"].mean()
-human = np.array(mean_df / 100)
+
+# Calculates the mean response value for each stimulus among all participants.
+human = np.array(raw_data.groupby("stim_id")["response_value"].mean() / 100)
+
+# Stimuli used in our experiment
 stims = np.array(
     [
         [7, 1, 1, 1, 1, 7],
@@ -24,73 +27,69 @@ stims = np.array(
     ]
 )
 
-mean_prs_vals = []
-max_prs_vals = []
-min_prs_vals = []
-term1_prs_vals = []
-term2_prs_vals = []
-weighted_mean_prs_vals_arr = [[] for i in range(11)]
-merged_prs_vals = []
+# Weights of the weighted mean
+weights = np.round(np.arange(0.0, 1.1, 0.1), 1)
 
-for stim in stims:
+# Variables that stores the model values for each stimulus
+prs_mean_vals = np.zeros(len(stims))
+prs_max_vals = np.zeros(len(stims))
+prs_min_vals = np.zeros(len(stims))
+prs_term1_vals = np.zeros(len(stims))
+prs_term2_vals = np.zeros(len(stims))
+prs_weighted_mean_vals = np.zeros((len(weights), len(stims)))
+prs_merged_vals = np.zeros(len(stims))
+
+# Calculates the model values for each stimulus
+for s_i, stim in enumerate(stims):
     stim = stim.reshape(3, 2)
-    merged_prs_vals.append(models.paris_merge(stim))
-    mean_prs_vals.append(models.paris_mean(stim))
-    max_prs_vals.append(models.paris_max(stim))
-    min_prs_vals.append(models.paris_min(stim))
-    term1_prs_vals.append(models.paris_term1(stim))
-    term2_prs_vals.append(models.paris_term2(stim))
-    for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
-        weighted_mean_prs_vals_arr[w_i].append(
-            models.paris_weighted_mean(stim, [w, 1 - w])
-        )
+    prs_merged_vals[s_i] = models.paris_merge(stim)
+    prs_mean_vals[s_i] = models.paris_mean(stim)
+    prs_max_vals[s_i] = models.paris_max(stim)
+    prs_min_vals[s_i] = models.paris_min(stim)
+    prs_term1_vals[s_i] = models.paris_term1(stim)
+    prs_term2_vals[s_i] = models.paris_term2(stim)
+    for i, w in enumerate(weights):
+        prs_weighted_mean_vals[i, s_i] = models.paris_weighted_mean(stim, [w, 1 - w])
 
+# Converts the calculation results to a data frame.
 df = pd.DataFrame(
     [
         human,
-        mean_prs_vals,
-        merged_prs_vals,
-        max_prs_vals,
-        min_prs_vals,
-        term1_prs_vals,
-        term2_prs_vals,
+        prs_mean_vals,
+        prs_merged_vals,
+        prs_max_vals,
+        prs_min_vals,
+        prs_term1_vals,
+        prs_term2_vals,
     ],
     index=["human", "mean", "merge", "max", "min", "term1", "term2"],
-    columns=np.arange(1, 7),
 ).T
 
-corr = df.corr(method=lambda x, y: pearsonr(x, y)[0])
-pvalues = df.corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(len(df.columns))
-asterisk = pvalues.map(lambda x: "".join(["*" for t in [0.05, 0.01, 0.001] if x <= t]))
+# Calculates the correlation coefficient between the mean response value and each model value.
+correlations = df.corr(method=lambda x, y: pearsonr(x, y)[0])
+pvalues = df.corr(method=lambda x, y: pearsonr(x, y)[1])
 
-print("correlations:")
-print(corr.iloc[0, 1:])
-print("\npvalues:")
-print(pvalues.iloc[0, 1:])
-print("\nresults:")
-print(corr.iloc[0, 1:].round(3).astype(str) + asterisk.iloc[0, 1:])
-# %%
+# Prints out the results.
+print("correlations:\n", correlations.iloc[0, 1:])
+print("\npvalues:\n", pvalues.iloc[0, 1:])
 
-w_df = pd.DataFrame([human], index=["human"], columns=np.arange(1, 7))
-for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
-    w_df.loc[str(w)] = weighted_mean_prs_vals_arr[w_i]
-w_df = w_df.T
-
-w_corr = w_df.corr(method=lambda x, y: pearsonr(x, y)[0])
-w_pvalues = w_df.corr(method=lambda x, y: pearsonr(x, y)[1]) - np.eye(len(w_df.columns))
-w_asterisk = w_pvalues.map(
-    lambda x: "".join(["*" for t in [0.05, 0.01, 0.001] if x <= t])
+# In the same way as the above procedure, calculates the correlation coefficient for each weight of the weighted mean model.
+# Converts the calculation results to a data frame.
+df = pd.DataFrame(
+    np.concatenate([[human], prs_weighted_mean_vals], axis=0).T,
+    columns=np.concatenate([["human"], weights.astype("str")]),
 )
 
-print("correlations:")
-print(w_corr.iloc[0, 1:])
-print("\npvalues:")
-print(w_pvalues.iloc[0, 1:])
-print("\nresults:")
-print(w_corr.iloc[0, 1:].round(3).astype(str) + w_asterisk.iloc[0, 1:])
+# Calculates the correlation coefficient between the mean response value and each model value.
+correlations = df.corr(method=lambda x, y: pearsonr(x, y)[0])
+pvalues = df.corr(method=lambda x, y: pearsonr(x, y)[1])
 
+# Prints out the results.
+print("correlations:\n", correlations.iloc[0, 1:])
+print("\npvalues:\n", pvalues.iloc[0, 1:])
+
+# Plots the results
 plt.xlabel("weight of 1st term")
 plt.ylabel("correlation with human")
-w_corr.iloc[0, 1:].plot(grid=True, label="weighted_mean_prs", marker="o")
+correlations.iloc[0, 1:].plot(grid=True, label="weighted_mean_prs", marker="o")
 plt.show()
-# %%

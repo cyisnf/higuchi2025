@@ -12,70 +12,63 @@ import warnings
 warnings.resetwarnings()
 warnings.simplefilter("ignore", RuntimeWarning)
 
-row = 3
-col = 2
+ROW = 3
+COL = 2
 
 
-def tab2data(arr_ct):
-    row, col = arr_ct.shape
-    x = []
-    y = []
-    for r in range(row):
-        for c in range(col):
-            val = int(arr_ct[r, c])
-            x += [r] * val
-            y += [c] * val
-    return x, y
-
-
-def data2tab(row, col, x, y):
-    arr_ct = np.zeros([row, col])
-    for i in range(len(x)):
-        arr_ct[x[i], y[i]] += 1
-    return arr_ct
+def val2ct(x_vals, y_vals):
+    # Converts two variable values into a contingency table.
+    ct = np.zeros([ROW, COL])
+    for x_val, y_val in zip(x_vals, y_vals):
+        ct[int(x_val), int(y_val)] += 1
+    return ct
 
 
 def sampling(sample_size, probs):
-    samples = random.choices(np.arange(0, row * col, 1), k=sample_size, weights=probs)
-    x = []
-    y = []
+    # Samples two variables' values that follows the probability distribution of events.
+    samples = random.choices(np.arange(0, ROW * COL, 1), k=sample_size, weights=probs)
+    x_vals = []
+    y_vals = []
     for i in samples:
-        r = i // col
-        c = i % col
-        x.append(r)
-        y.append(c)
-    return x, y
+        x_vals.append(i // COL)
+        y_vals.append(i % COL)
+    return x_vals, y_vals
 
 
 def eval_estimation_performance(sample_size, sim_size):
+    # Evaluates the correlation coefficient between model and population mutual information.
+
+    # Makes output directory.
     output_dir = os.path.join("csv", f"sample_size={sample_size}_sim_size={sim_size}")
     os.makedirs(output_dir, exist_ok=True)
-    cols = [
-        "p_any_cause",  # P(C_prime)
-        "p_c10",  # P(C=1.)
-        "p_c05",  # P(C=.5)
-        "p_any_effect",  # P(E_prime)
-        "mi",  # mutual information
-        "paris",  # pARIs
-    ]
-    df = pd.DataFrame(index=[], columns=cols)
 
-    for p_any_cause in tqdm(np.round(np.arange(0.1, 1.0, 0.1), 1)):
-        for p_any_effect in tqdm(np.round(np.arange(0.1, 1.0, 0.1), 1), disable=True):
+    df = pd.DataFrame(
+        index=[],
+        columns=[
+            "p_any_cause",  # P(C^prime)
+            "p_any_effect",  # P(E^prime)
+            "mi",  # Mutual-information
+            "paris",  # pARIs
+        ],
+    )
 
+    prob_space = np.round(np.arange(0.1, 1.0, 0.1), 1)
+    for p_any_cause in tqdm(prob_space):
+        for p_any_effect in tqdm(prob_space, disable=True):
             pop_vals = []
             sample_mis = []
             sample_paris = []
 
             for _ in range(sim_size):
-                # Determine a population distribution.
-                p_c10 = random.uniform(0, p_any_cause)
-                p_c05 = p_any_cause - p_c10
-                p_c00 = 1 - p_any_cause
-                p_e10 = p_any_effect
+                # Determine base probabilities.
+                p_c10 = random.uniform(0, p_any_cause)  # P(C=1)
+                p_c05 = p_any_cause - p_c10  # P(C=.5)
+                p_c00 = 1 - p_any_cause  # P(C=0)
+                p_e10 = p_any_effect  # P(E=1)
                 if p_e10 - p_c00 > np.min([p_c10, p_e10]):
                     continue
 
+                # Determine a population distribution.
                 while True:
                     p_a_cell = random.uniform(
                         np.max([0, p_e10 - p_c00]), np.min([p_c10, p_e10])
@@ -94,29 +87,30 @@ def eval_estimation_performance(sample_size, sim_size):
                 p_b_cell = p_c10 - p_a_cell
                 p_n_cell = p_c05 - p_m_cell
                 p_d_cell = p_c00 - p_c_cell
-                ct = [p_a_cell, p_b_cell, p_m_cell, p_n_cell, p_c_cell, p_d_cell]
-                pop_ct = np.array(ct).reshape((row, col))
+                pop_ct = [p_a_cell, p_b_cell, p_m_cell, p_n_cell, p_c_cell, p_d_cell]
 
                 # Calculate population MI.
-                pop_vals.append(models.mutual_information(pop_ct))
+                pop_vals.append(
+                    models.mutual_information(np.array(pop_ct).reshape((ROW, COL)))
+                )
 
                 # Sample a contingency table
-                x, y = sampling(sample_size, ct)
-                sampled_ct = data2tab(row, col, x, y)
+                x, y = sampling(sample_size, pop_ct)
+                sampled_ct = val2ct(x, y)
 
                 # Calculate model's values.
                 sample_mis.append(models.mutual_information(sampled_ct))
                 sample_paris.append(models.paris_mean(sampled_ct))
 
             # Save the results as csv.
-            val_df = pd.DataFrame(
+            model_values = pd.DataFrame(
                 data={
                     "pop": pop_vals,
                     "mi": sample_mis,
                     "paris": sample_paris,
                 }
             )
-            val_df.to_csv(
+            model_values.to_csv(
                 os.path.join(
                     output_dir,
                     f"p_any_cause={p_any_cause}_p_any_effect={p_any_effect}.csv",
@@ -124,43 +118,54 @@ def eval_estimation_performance(sample_size, sim_size):
             )
 
             # Calculate the correlations.
-            corr_tab = val_df.corr(method="spearman")
+            corr_tab = model_values.corr(method="spearman")
             mi_corr = corr_tab.iloc[0, 1]
             paris_corr = corr_tab.iloc[0, 2]
-            record = pd.DataFrame(
-                [
-                    [
-                        p_any_cause,
-                        p_c10,
-                        p_c05,
-                        p_any_effect,
-                        mi_corr,
-                        paris_corr,
-                    ]
-                ],
-                columns=df.columns,
-            )
-            df = pd.concat([df, record], ignore_index=True, axis=0)
 
-    df = df.astype("float")
-    return df
+            # Stores the results.
+            df = pd.concat(
+                [
+                    df,
+                    pd.DataFrame(
+                        [
+                            [
+                                p_any_cause,
+                                p_any_effect,
+                                mi_corr,
+                                paris_corr,
+                            ]
+                        ],
+                        columns=df.columns,
+                    ),
+                ],
+                ignore_index=True,
+                axis=0,
+            )
+
+    return df.astype("float")
 
 
 def eval_calculability(sample_size, sim_size):
+    # For each model, evaluates the proportion of cases where they can be calculated.
+
+    # Makes output directory.
     output_dir = os.path.join("csv", f"sample_size={sample_size}_sim_size={sim_size}")
     os.makedirs(output_dir, exist_ok=True)
-    cols = [
-        "p_any_cause",
-        "p_any_effect",
-        "mi",
-        "paris",
-    ]
-    def_df = pd.DataFrame(index=[], columns=cols)
 
-    for p_any_cause in np.round(np.arange(0.1, 1.0, 0.1), 1):
-        for p_any_effect in np.round(np.arange(0.1, 1.0, 0.1), 1):
+    df = pd.DataFrame(
+        index=[],
+        columns=[
+            "p_any_cause",
+            "p_any_effect",
+            "mi",
+            "paris",
+        ],
+    )
 
-            # Load the csv files.
+    prob_space = np.round(np.arange(0.1, 1.0, 0.1), 1)
+    for p_any_cause in prob_space:
+        for p_any_effect in prob_space:
+            # Load csv files.
             val_df = pd.read_csv(
                 os.path.join(
                     output_dir,
@@ -171,27 +176,34 @@ def eval_calculability(sample_size, sim_size):
             # Evaluate the proportions for which the models are calculable.
             mi_def = 1 - len(val_df[val_df["mi"].isna()]) / len(val_df["mi"])
             paris_def = 1 - len(val_df[val_df["paris"].isna()]) / len(val_df["paris"])
-            record = pd.DataFrame(
-                [
-                    [
-                        p_any_cause,
-                        p_any_effect,
-                        mi_def,
-                        paris_def,
-                    ]
-                ],
-                columns=def_df.columns,
-            )
-            def_df = pd.concat([def_df, record], ignore_index=True, axis=0)
 
-    def_df = def_df.astype("float")
-    return def_df
+            # Stores the results.
+            df = pd.concat(
+                [
+                    df,
+                    pd.DataFrame(
+                        [
+                            [
+                                p_any_cause,
+                                p_any_effect,
+                                mi_def,
+                                paris_def,
+                            ]
+                        ],
+                        columns=df.columns,
+                    ),
+                ],
+                ignore_index=True,
+                axis=0,
+            )
+    return df.astype("float")
 
 
 def plotter(prefix, df, sample_size, sim_size):
+    # Makes a figure.
     fig = plt.figure(figsize=(18, 5))
 
-    # Add the axis of pARIs_mean.
+    # Adds the axis of pARIs_mean.
     ax1 = fig.add_subplot(1, 3, 1)
     ax1.set_title(r"$\it{pARIs_{mean}}$", size=20)
     ax1.set_xticks(np.arange(0.2, 1.0, 0.2))
@@ -216,7 +228,7 @@ def plotter(prefix, df, sample_size, sim_size):
     font = font_manager.FontProperties(size=20)
     cbar.ax.yaxis.label.set_font_properties(font)
 
-    # Add the axis of MI.
+    # Adds the axis of MI.
     ax2 = fig.add_subplot(1, 3, 2)
     ax2.set_title(r"$\it{MI}$", size=20)
     ax2.set_xticks(np.arange(0.2, 1.0, 0.2))
@@ -241,7 +253,7 @@ def plotter(prefix, df, sample_size, sim_size):
     font = font_manager.FontProperties(size=20)
     cbar.ax.yaxis.label.set_font_properties(font)
 
-    # Add the axis of the difference.
+    # Adds the axis of the difference.
     ax3 = fig.add_subplot(1, 3, 3)
     ax3.set_title(r"$\it{pARIs_{mean}}-\it{MI}$", size=20)
     ax3.set_xticks(np.arange(0.2, 1.0, 0.2))
@@ -253,7 +265,7 @@ def plotter(prefix, df, sample_size, sim_size):
     z_new = griddata((x, y), z, (x_new, y_new))
     c = ax3.pcolormesh(x_new, y_new, z_new, cmap="bwr")
     c.set_clim(-1, 1)
-    cbar = fig.colorbar(c, ax=ax3, label=r"Difference in proportions")  # カラーバー
+    cbar = fig.colorbar(c, ax=ax3, label=r"Difference in proportions")
     for (j, i), label in np.ndenumerate(z_new):
         ax3.text(
             i * 0.1 + 0.1,
@@ -266,7 +278,7 @@ def plotter(prefix, df, sample_size, sim_size):
     font = font_manager.FontProperties(size=20)
     cbar.ax.yaxis.label.set_font_properties(font)
 
-    # Add the axis labels.
+    # Adds the axis labels.
     fig.text(0.5, 0, r"$P(C=c^\prime)$", ha="center", va="center", fontsize=20)
     fig.text(
         0,
@@ -278,7 +290,7 @@ def plotter(prefix, df, sample_size, sim_size):
         fontsize=20,
     )
 
-    # Plot the figure.
+    # Plots the figure.
     plt.tight_layout()
     os.makedirs("./figs", exist_ok=True)
     plt.savefig(
