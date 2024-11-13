@@ -16,9 +16,7 @@ importlib.reload(models)
 
 
 raw_data = pd.read_csv("experimental_data.csv")
-raw_data = raw_data.drop("number", axis=1)
-raw_data = raw_data.rename(columns={"frequency": "stim"})
-raw_data["estimation"] /= 100
+raw_data["response_value"] /= 100
 stims = np.array(
     [
         [7, 1, 1, 1, 1, 7],
@@ -35,7 +33,7 @@ weighted_mean_prs_vals_arr = [[] for i in range(11)]
 for stim in stims:
     stim = stim.reshape(3, 2)
     for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
-        weighted_mean_prs_vals_arr[w_i].append(
+        prs_weighted_mean_vals_arr[w_i].append(
             models.paris_weighted_mean(stim, [w, 1 - w])
         )
 
@@ -45,7 +43,7 @@ aiccs = {}
 for i in range(len(stims)):
     for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
         idx = "w" + str(int(w * 10))
-        raw_data.loc[raw_data["stim"] == i + 1, idx] = weighted_mean_prs_vals_arr[w_i][
+        raw_data.loc[raw_data["stimulation_id"] == i + 1, idx] = prs_weighted_mean_vals_arr[w_i][
             i
         ]
 
@@ -54,7 +52,7 @@ for i in range(len(stims)):
     for w_i, w in enumerate(np.round(np.arange(0.0, 1.1, 0.1), 1)):
         idx = "w" + str(int(w * 10))
         md = smf.mixedlm(
-            f"estimation ~ {idx}",
+            f"response_value ~ {idx}",
             raw_data,
             re_formula=f"~{idx}",
             groups=raw_data["user_id"],

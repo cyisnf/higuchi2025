@@ -8,14 +8,10 @@ How humans estimate causality is one of the central questions of cognitive scien
 
 ## Requirements
 
-- Python = 3.10.14
-- numpy = 1.26.4
-- pandas = 2.2.2
-- matplotlib = 3.8.4
-- scipy = 1.13.1
-- tqdm = 4.66.4
-- scikit-learn = 1.5.0
-- statsmodel = 0.14.2
+- Python (Ver. 3.9.13)
+- Packages listed in requirements.txt
+    If you have the relevant version of Python installed, you can run our program by executing the following command on the terminal.
+    ```pip install -r requirements.txt```
 
 ## Experimental Analysis
 

@@ -11,9 +11,7 @@ warnings.simplefilter("ignore", RuntimeWarning)
 
 raw_data = pd.read_csv("experimental_data.csv")
 # raw_data = raw_data.drop("est_i", axis=1)
-raw_data = raw_data.drop("number", axis=1)
-raw_data = raw_data.rename(columns={"frequency": "stim"})
-mean_df = raw_data.groupby("stim")["estimation"].mean()
+mean_df = raw_data.groupby("stimulation_id")["response_value"].mean()
 human = np.array(mean_df / 100)
 stims = np.array(
     [
