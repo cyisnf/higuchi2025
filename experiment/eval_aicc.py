@@ -35,7 +35,7 @@ for i, stim in enumerate(stims):
     raw_data.loc[raw_data["stim_id"] == i + 1, "prs_max"] = models.paris_max(stim)
     raw_data.loc[raw_data["stim_id"] == i + 1, "prs_min"] = models.paris_min(stim)
     raw_data.loc[raw_data["stim_id"] == i + 1, "prs_term1"] = models.paris_term1(stim)
-    raw_data.loc[raw_data["stim_id"] == i + 1, "prs_term2"] = models.paris_term1(stim)
+    raw_data.loc[raw_data["stim_id"] == i + 1, "prs_term2"] = models.paris_term2(stim)
     raw_data.loc[raw_data["stim_id"] == i + 1, "prs_merge"] = models.paris_merge(stim)
 
 
@@ -47,6 +47,7 @@ for model in models:
     md = smf.mixedlm(
         f"response_value ~ {model}",
         raw_data,
+        re_formula=f"~{model}",
         groups=raw_data["part_id"],
     )
     mdf = md.fit(reml=False, method="cg")

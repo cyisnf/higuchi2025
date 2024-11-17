@@ -85,7 +85,7 @@ correlations = df.corr(method=lambda x, y: pearsonr(x, y)[0])
 pvalues = df.corr(method=lambda x, y: pearsonr(x, y)[1])
 
 # Prints out the results.
-print("correlations:\n", correlations.iloc[0, 1:])
+print("\ncorrelations:\n", correlations.iloc[0, 1:])
 print("\npvalues:\n", pvalues.iloc[0, 1:])
 
 # Plots the results
