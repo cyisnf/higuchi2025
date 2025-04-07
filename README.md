@@ -1,4 +1,4 @@
-# Replication codes for *A dependence detection heuristic in causal induction to handle nonbinary variables*
+# Replication Codes for: *A dependence detection heuristic in causal induction to handle nonbinary variables*
 
 Published article link: <https://doi.org/10.1038/s41598-025-91051-7>
 
