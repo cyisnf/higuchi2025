@@ -1,4 +1,4 @@
-# Replication codes for XXX
+# Replication codes for *A dependence detection heuristic in causal induction to handle nonbinary variables*
 
 Published article link: <https://doi.org/10.1038/s41598-025-91051-7>
 
@@ -24,7 +24,7 @@ How humans estimate causality is one of the central questions of cognitive scien
 
 ## Experimental Analysis
 
-The following codes can be executed to replicate the results in the _Experiment_ section.
+The following codes can be executed to replicate the results in the *Experiment* section.
 
 - eval_colleration.py (Table 5)
 - eval_aicc.py (Table 5)
@@ -32,7 +32,7 @@ The following codes can be executed to replicate the results in the _Experiment_
 
 ## Simulation
 
-The following code can be executed to replicate the results in the _Simulation_ section.
+The following code can be executed to replicate the results in the *Simulation* section.
 Note that the first run takes several hours.
 
 - do_simulation.py (Figures 2 and 3)
